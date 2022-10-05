@@ -41,5 +41,7 @@ final class DopeHTTPTests: XCTestCase {
 	func testExample() async throws {
 		let client = makeClient(.shared, [:])
 		let response = try await client([:])
+		
+		XCTAssertEqual(response[hashMap: "body", default: [:]][int: "number"], 123)
 	}
 }

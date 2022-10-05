@@ -1,6 +1,6 @@
 import Foundation
 
-public struct HashMap: Equatable, Hashable, Decodable, ExpressibleByDictionaryLiteral {
+public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLiteral {
 	public typealias Key = String
 	public typealias Value = TypedValue
 
@@ -26,9 +26,14 @@ public struct HashMap: Equatable, Hashable, Decodable, ExpressibleByDictionaryLi
 		} else {
 			throw DecodingError.dataCorruptedError(
 				in: container,
-				debugDescription: "AnyDecodable value cannot be decoded"
+				debugDescription: "couldn’t decode HashMap"
 			)
 		}
+	}
+	
+	public func encode(to encoder: Encoder) throws {
+		var container = encoder.singleValueContainer()
+		try container.encode(storage)
 	}
 }
 
@@ -68,6 +73,32 @@ public extension HashMap {
 
 	subscript(int key: String, default fallback: Int) -> Int {
 		self[int: key] ?? fallback
+	}
+	
+	subscript(unsignedInt key: String) -> UInt? {
+		switch storage[key] {
+		case let .unsignedInt(uInt):
+			return uInt
+		default:
+			return nil
+		}
+	}
+
+	subscript(unsignedInt key: String, default fallback: UInt) -> UInt {
+		self[unsignedInt: key] ?? fallback
+	}
+	
+	subscript(bool key: String) -> Bool? {
+		switch storage[key] {
+		case let .bool(bool):
+			return bool
+		default:
+			return nil
+		}
+	}
+
+	subscript(bool key: String, default fallback: Bool) -> Bool {
+		self[bool: key] ?? fallback
 	}
 
 	subscript(double key: String) -> Double? {
