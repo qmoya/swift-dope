@@ -2,17 +2,33 @@ import Dope
 import Foundation
 import JSONSchema
 
-typealias Path = String
-typealias Specification = HashMap
+// MARK: Data
 
-typealias UnvalidatedItem = TypedValue
-typealias ValidatedItem = TypedValue
+// A JSON Schema Draft 4, 6, 7, 2019-09, 2020-12 specification.
+public typealias Specification = HashMap
 
+// An unvalidated item.
+public typealias UnvalidatedItem = TypedValue
+
+// A validated item.
+public typealias ValidatedItem = TypedValue
+
+// MARK: Functions
+
+// Serialize a spec into a [String: Any] dictionary.
 typealias SerializeSpec = (JSONEncoder, Specification) throws -> [String: Any]
+
+// Serialize an unvalidated item into a [String: Any] dictionary.
 typealias SerializeUnvalidatedItem = (JSONEncoder, UnvalidatedItem) throws -> [String: Any]
 
-typealias Validate = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
-	-> (Specification, UnvalidatedItem) throws -> ValidatedItem
+// Validate an unvalidated item using a specification.
+public typealias Validate = (Specification, UnvalidatedItem) throws -> ValidatedItem
+
+// Make a validate function.
+typealias MakeValidate = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
+	-> Validate
+
+// MARK: Implementation
 
 let serializeSpec: SerializeSpec = { encoder, specification in
 	let specJSON = try encoder.encode(specification)
@@ -26,7 +42,7 @@ let serializeUnvalidatedItem: SerializeUnvalidatedItem = { encoder, item in
 	return serialized
 }
 
-let makeValidate: Validate = { serializeSpec, serializeUnvalidatedItem in
+let makeValidate: MakeValidate = { serializeSpec, serializeUnvalidatedItem in
 	{ specification, item in
 		let encoder = JSONEncoder()
 
@@ -47,4 +63,4 @@ let makeValidate: Validate = { serializeSpec, serializeUnvalidatedItem in
 	}
 }
 
-let validate = makeValidate(serializeSpec, serializeUnvalidatedItem)
+public let validate: Validate = makeValidate(serializeSpec, serializeUnvalidatedItem)
