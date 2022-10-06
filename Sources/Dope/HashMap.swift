@@ -30,7 +30,7 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 			)
 		}
 	}
-	
+
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.singleValueContainer()
 		try container.encode(storage)
@@ -75,7 +75,7 @@ public extension HashMap {
 	subscript(int key: String, default fallback: Int) -> Int {
 		self[int: key] ?? fallback
 	}
-	
+
 	subscript(unsignedInt key: String) -> UInt? {
 		switch storage[key] {
 		case let .unsignedInt(uInt):
@@ -88,7 +88,7 @@ public extension HashMap {
 	subscript(unsignedInt key: String, default fallback: UInt) -> UInt {
 		self[unsignedInt: key] ?? fallback
 	}
-	
+
 	subscript(bool key: String) -> Bool? {
 		switch storage[key] {
 		case let .bool(bool):

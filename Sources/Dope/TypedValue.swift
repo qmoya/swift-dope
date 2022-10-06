@@ -31,7 +31,7 @@ public enum TypedValue: Equatable, Hashable, Codable {
 				.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "unexpected data"))
 		}
 	}
-	
+
 	public func encode(to encoder: Encoder) throws {
 		var singleValueContainer = encoder.singleValueContainer()
 		switch self {

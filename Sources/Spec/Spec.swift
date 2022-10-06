@@ -1,13 +1,6 @@
-//
-//  File.swift
-//  
-//
-//  Created by Quico Moya on 05.10.22.
-//
-
+import Dope
 import Foundation
 import JSONSchema
-import Dope
 
 typealias Path = String
 typealias Specification = HashMap
@@ -18,7 +11,8 @@ typealias ValidatedItem = TypedValue
 typealias SerializeSpec = (JSONEncoder, Specification) throws -> [String: Any]
 typealias SerializeUnvalidatedItem = (JSONEncoder, UnvalidatedItem) throws -> [String: Any]
 
-typealias Validate = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem) -> (Specification, UnvalidatedItem) throws -> ValidatedItem
+typealias Validate = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
+	-> (Specification, UnvalidatedItem) throws -> ValidatedItem
 
 let serializeSpec: SerializeSpec = { encoder, specification in
 	let specJSON = try encoder.encode(specification)
@@ -35,12 +29,12 @@ let serializeUnvalidatedItem: SerializeUnvalidatedItem = { encoder, item in
 let makeValidate: Validate = { serializeSpec, serializeUnvalidatedItem in
 	{ specification, item in
 		let encoder = JSONEncoder()
-		
+
 		let validationResult = try JSONSchema.validate(
 			serializeUnvalidatedItem(encoder, item),
 			schema: serializeSpec(encoder, specification)
 		)
-		
+
 		switch validationResult {
 		case .valid:
 			return item

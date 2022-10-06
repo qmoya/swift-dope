@@ -18,24 +18,24 @@ let package = Package(
 		),
 	],
 	dependencies: [
-		.package(url: "https://github.com/kylef/JSONSchema.swift.git", from: "0.6.0")
+		.package(url: "https://github.com/kylef/JSONSchema.swift.git", from: "0.6.0"),
 	],
 	targets: [
 		.target(
 			name: "Dope",
 			dependencies: []
 		),
-		
+
 		.testTarget(
 			name: "DopeTests",
 			dependencies: ["Dope"]
 		),
-		
+
 		.target(
 			name: "Spec",
 			dependencies: [
 				"Dope",
-				.product(name: "JSONSchema", package: "JSONSchema.swift")
+				.product(name: "JSONSchema", package: "JSONSchema.swift"),
 			]
 		),
 
@@ -48,7 +48,7 @@ let package = Package(
 			name: "DopeHTTP",
 			dependencies: ["Dope"]
 		),
-		
+
 		.testTarget(
 			name: "DopeHTTPTests",
 			dependencies: ["DopeHTTP"]
