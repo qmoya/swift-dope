@@ -38,6 +38,7 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 }
 
 extension HashMap: Error {}
+extension [TypedValue]: Error {}
 
 public extension HashMap {
 	subscript(string key: String) -> String? {
