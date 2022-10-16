@@ -1,95 +1,79 @@
-//
-//  File.swift
-//  
-//
-//  Created by Quico Moya on 14.10.22.
-//
-
 import Foundation
 
 protocol TypedValuable {
-	func makeTypeValue() -> [TypedValue]
+	func toTypedValue() -> TypedValue
 }
 
-struct UnKeyedValue: TypedValuable {
-	let element: TypedValue
-	
-	func makeTypeValue() -> [TypedValue] {
-		[element]
+extension String: TypedValuable {
+	func toTypedValue() -> TypedValue {
+		.string(self)
 	}
 }
 
-struct TypedArray: TypedValuable {
-	let elements: [TypedValue]
-	
-	func makeTypeValue() -> [TypedValue] {
-		elements
+extension Int: TypedValuable {
+	func toTypedValue() -> TypedValue {
+		.int(self)
 	}
 }
 
-//extension TypedArray {
-//	init(@TypedValuableBuilder _ builder: () -> [any TypedValuable]) {
-//		elements =
-//	}
-//}
+extension UInt: TypedValuable {
+	func toTypedValue() -> TypedValue {
+		.unsignedInt(self)
+	}
+}
 
-struct KeyedValue: TypedValuable {
+extension Double: TypedValuable {
+	func toTypedValue() -> TypedValue {
+		.double(self)
+	}
+}
+
+struct Group: TypedValuable {
+	init(_ key: String, @KeyValueBuilder value: @escaping () -> [TypedValue]) {
+		self.key = key
+		self.value = value
+	}
+	
 	let key: String
-	@TypedValuableBuilder var value: () -> [any TypedValuable]
 	
-	func makeTypeValue() -> [TypedValue] {
-		value().map { $0.makeTypeValue() }
+	@KeyValueBuilder let value: () -> [TypedValue]
+	
+	func toTypedValue() -> TypedValue {
+		let v = value()
+		
+		if v.count == 1 {
+			return .hashMap([
+				key: v[0]
+			])
+		}
+		
+		return .hashMap([
+			key: .array(v)
+		])
 	}
 }
 
 @resultBuilder
-struct TypedValuableBuilder {
-	static func buildBlock(_ component: any TypedValuable) -> any TypedValuable {
-		component
-	}
-
-	static func buildBlock(_ components: any TypedValuable...) -> any TypedValuable {
-		TypedArray(elements: components.map { $0.makeTypeValue() })
+struct KeyValueBuilder {
+	static func buildBlock() -> [TypedValuable] {
+		[]
 	}
 	
-	static func buildEither(first component: TypedValuable) -> any TypedValuable {
-		return UnKeyedValue(element: component.makeTypeValue())
+	static func buildBlock(_ components: TypedValuable...) -> [any TypedValuable] {
+		components
 	}
 	
-	static func buildEither(second component: TypedValuable) -> any TypedValuable {
-		return UnKeyedValue(element: component.makeTypeValue())
+	static func buildFinalResult(_ component: [TypedValuable]) -> [TypedValue] {
+		component.map { $0.toTypedValue() }
 	}
-	
-//	static func buildBlock(_ a: TypedValuable, _ b: TypedValuable) -> any TypedValuable {
-//		switch (a.makeTypeValue(), b.makeTypeValue()) {
-//		case let (.hashMap(ha), .hashMap(hb)):
-//			return UnKeyedValue(element: .hashMap(ha.merging(hb, uniquingKeysWith: { l, r in r })))
-//		default:
-//			fatalError()
-//		}
-//	}
-	
-//	static func buildPartialBlock(first content: KeyedValue) -> any TypedValuable {
-//		switch content.value {
-//		case .hashMap:
-//			return content
-//		default:
-//			fatalError()
-//		}
-//	}
-//
-//	static func buildPartialBlock(accumulated: KeyedValue, next: KeyedValue) -> TypedValuable {
-//		switch (accumulated, next) {
-//		case accumulated.value :
-//			ac[n.key] = n.value
-//			return hashMap
-//		default:
-//			fatalError()
-//		}
-//	}
 }
 
-func makeTypedValue(@TypedValuableBuilder _ builder: () -> TypedValuable) -> TypedValue {
-	let value = builder().makeTypeValue()
-	return value
+func makeTypedValue(@KeyValueBuilder _ content: () -> [TypedValue]) -> TypedValue {
+	let v = content()
+	
+	if v.count == 1 {
+		return v[0]
+	}
+	
+	return .array(v)
 }
