@@ -31,4 +31,26 @@ final class ResultBuilderTests: XCTestCase {
 		
 		XCTAssertEqual(example, TypedValue.hashMap(["hello": .array([.string("one"), .string("two")])]))
 	}
+	
+	func testTwoNestedAndMixed() throws {
+		let example: TypedValue = makeTypedValue {
+			Group("hello") {
+				"one"
+				2
+			}
+		}
+		
+		XCTAssertEqual(example, TypedValue.hashMap(["hello": .array([.string("one"), .int(2)])]))
+	}
+	
+	func testTwoNestedAndMixedWithDouble() throws {
+		let example: TypedValue = makeTypedValue {
+			Group("hello") {
+				1.0
+				2
+			}
+		}
+		
+		XCTAssertEqual(example, TypedValue.hashMap(["hello": .array([.double(1), .int(2)])]))
+	}
 }
