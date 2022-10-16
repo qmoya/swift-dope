@@ -16,9 +16,13 @@ let package = Package(
 			name: "DopeHTTP",
 			targets: ["DopeHTTP"]
 		),
+		.library(
+			name: "Spec",
+			targets: ["Spec"]
+		),
 	],
 	dependencies: [
-		.package(url: "https://github.com/kylef/JSONSchema.swift.git", from: "0.6.0"),
+		.package(url: "https://github.com/kylef/JSONSchema.swift.git", branch: "master"),
 	],
 	targets: [
 		.target(

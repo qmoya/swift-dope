@@ -34,7 +34,7 @@ final class DopeTests: XCTestCase {
 			]),
 		]
 
-		XCTAssertNoThrow(try Spec.validate(schema, .hashMap(item)))
+		XCTAssertNoThrow(try assertWithSpecification(schema, .hashMap(item)))
 	}
 
 	func testItThrowsWhenInvalid() throws {
@@ -67,6 +67,6 @@ final class DopeTests: XCTestCase {
 			]),
 		]
 
-		XCTAssertThrowsError(try Spec.validate(schema, .hashMap(item)))
+		XCTAssertThrowsError(try assertWithSpecification(schema, .hashMap(item)))
 	}
 }

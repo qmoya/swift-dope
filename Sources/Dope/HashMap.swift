@@ -1,6 +1,10 @@
 import Foundation
 
-public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLiteral {
+public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLiteral, Sequence {
+	public func makeIterator() -> Dictionary<String, TypedValue>.Iterator {
+		storage.makeIterator()
+	}
+	
 	public typealias Key = String
 	public typealias Value = TypedValue
 
@@ -14,6 +18,39 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 
 	public init(_ dictionary: [String: TypedValue]) {
 		storage = dictionary
+	}
+	
+	public init(_ dictionary: [String: Any]) {
+		var storage = [String: TypedValue]()
+		
+		for (key, value) in dictionary {
+			if let v = value as? TypedValue {
+				storage[key] = v
+			}
+			if let v = value as? Bool {
+				storage[key] = .bool(v)
+			}
+			if let v = value as? String {
+				storage[key] = .string(v)
+			}
+			if let v = value as? Double {
+				storage[key] = .double(v)
+			}
+			if let v = value as? UInt {
+				storage[key] = .unsignedInt(v)
+			}
+			if let v = value as? Int {
+				storage[key] = .int(v)
+			}
+			if let v = value as? [TypedValue] {
+				storage[key] = .array(v)
+			}
+			if let v = value as? HashMap {
+				storage[key] = .hashMap(v)
+			}
+		}
+		
+		self.storage = storage
 	}
 
 	private var storage: [String: TypedValue] = [:]
@@ -34,6 +71,14 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 	public func encode(to encoder: Encoder) throws {
 		var container = encoder.singleValueContainer()
 		try container.encode(storage)
+	}
+	
+	public func merging(
+		_ other: HashMap,
+		uniquingKeysWith combine: (TypedValue, TypedValue) throws -> TypedValue
+	) rethrows -> HashMap {
+		let merged = try storage.merging(other.storage, uniquingKeysWith: combine)
+		return HashMap(merged)
 	}
 }
 
@@ -116,11 +161,20 @@ public extension HashMap {
 	}
 
 	subscript(hashMap key: String) -> HashMap? {
-		switch storage[key] {
-		case let .hashMap(hashMap):
-			return hashMap
-		default:
-			return nil
+		get {
+			switch storage[key] {
+			case let .hashMap(hashMap):
+				return hashMap
+			default:
+				return nil
+			}
+		}
+		set {
+			guard let v = newValue else {
+				storage.removeValue(forKey: key)
+				return
+			}
+			storage[key] = .hashMap(v)
 		}
 	}
 
@@ -149,4 +203,39 @@ public extension HashMap {
 	subscript(array key: String, default fallback: [TypedValue]) -> [TypedValue] {
 		self[array: key] ?? fallback
 	}
+	
+	subscript(hashMaps key: String) -> [HashMap]? {
+		guard let array = self[array: key] else {
+			return nil
+		}
+		let mapped: [HashMap] = array.compactMap {
+			switch $0 {
+			case let .hashMap(hashMap):
+				return hashMap
+			default:
+				return nil
+			}
+		}
+		guard mapped.count == array.count else {
+			return nil
+		}
+		return mapped
+	}
+
+	subscript(hashMaps key: String, default fallback: [HashMap]) -> [HashMap] {
+		self[hashMaps: key] ?? fallback
+	}
+	
+	subscript(key: String) -> TypedValue? {
+		get {
+			storage[key]
+		}
+		set {
+			storage[key] = newValue
+		}
+	}
+}
+
+extension HashMap: Identifiable {
+	public var id: String { self[string: "id", default: UUID().uuidString]}
 }

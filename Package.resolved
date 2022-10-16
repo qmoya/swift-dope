@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kylef/JSONSchema.swift.git",
       "state" : {
-        "revision" : "d14de4b2d9205068c9db89c00d097ca43c897000",
-        "version" : "0.6.0"
+        "branch" : "master",
+        "revision" : "8c7ec156dde09715d8d2ed83cc8fe6b1ba90648c"
       }
     },
     {
@@ -23,8 +23,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kylef/Spectre.git",
       "state" : {
-        "revision" : "26cc5e9ae0947092c7139ef7ba612e34646086c7",
-        "version" : "0.10.1"
+        "revision" : "d02129a9af77729de049d328dd61e530b6f2bb2b"
       }
     }
   ],

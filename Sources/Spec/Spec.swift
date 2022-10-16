@@ -7,6 +7,9 @@ import JSONSchema
 // A JSON Schema Draft 4, 6, 7, 2019-09, 2020-12 specification.
 public typealias Specification = HashMap
 
+// A filename.
+public typealias FileBaseName = String
+
 // An unvalidated item.
 public typealias UnvalidatedItem = TypedValue
 
@@ -19,14 +22,19 @@ public typealias ValidatedItem = TypedValue
 typealias SerializeSpec = (JSONEncoder, Specification) throws -> [String: Any]
 
 // Serialize an unvalidated item into a [String: Any] dictionary.
-typealias SerializeUnvalidatedItem = (JSONEncoder, UnvalidatedItem) throws -> [String: Any]
+typealias SerializeUnvalidatedItem = (JSONEncoder, UnvalidatedItem) throws -> Any
 
 // Validate an unvalidated item using a specification.
-public typealias Validate = (Specification, UnvalidatedItem) throws -> ValidatedItem
+public typealias AssertWithSpecification = (Specification, UnvalidatedItem) throws -> ValidatedItem
+
+// Validate an unvalidated item using a file.
+public typealias AssertWithFile = (FileBaseName,  UnvalidatedItem) throws -> ValidatedItem
 
 // Make a validate function.
-typealias MakeValidate = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
-	-> Validate
+typealias MakeAssertWithSpecification = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
+	-> AssertWithSpecification
+
+public typealias MakeAssertWithFile = (Bundle) -> AssertWithFile
 
 // MARK: Implementation
 
@@ -38,18 +46,17 @@ let serializeSpec: SerializeSpec = { encoder, specification in
 
 let serializeUnvalidatedItem: SerializeUnvalidatedItem = { encoder, item in
 	let itemJSON = try encoder.encode(item)
-	let serialized = try JSONSerialization.jsonObject(with: itemJSON) as! [String: Any]
-	return serialized
+	return try JSONSerialization.jsonObject(with: itemJSON)
 }
 
-let makeValidate: MakeValidate = { serializeSpec, serializeUnvalidatedItem in
+let makeAssertWithSpecification: MakeAssertWithSpecification = { serializeSpec, serializeUnvalidatedItem in
 	{ specification, item in
 		let encoder = JSONEncoder()
 
-		let validationResult = try JSONSchema.validate(
-			serializeUnvalidatedItem(encoder, item),
-			schema: serializeSpec(encoder, specification)
-		)
+		let serializedItem = try serializeUnvalidatedItem(encoder, item)
+		let serializedSpec = try serializeSpec(encoder, specification)
+		
+		let validationResult = try JSONSchema.validate(serializedItem, schema: serializedSpec)
 
 		switch validationResult {
 		case .valid:
@@ -63,4 +70,26 @@ let makeValidate: MakeValidate = { serializeSpec, serializeUnvalidatedItem in
 	}
 }
 
-public let validate: Validate = makeValidate(serializeSpec, serializeUnvalidatedItem)
+public let makeAssertWithFile: MakeAssertWithFile = { bundle in
+	{ baseName, item in
+		let file = bundle.path(forResource: baseName, ofType: "json")!
+		let data = try NSData(contentsOfFile: file) as Data
+		let encoder = JSONEncoder()
+		let serializedSpec = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+
+		let serializedItem = try serializeUnvalidatedItem(encoder, item)
+		let validationResult = try JSONSchema.validate(serializedItem, schema: serializedSpec)
+
+		switch validationResult {
+		case .valid:
+			return item
+		case let .invalid(errors):
+			let errorsJSON = try encoder.encode(errors)
+			let decoder = JSONDecoder()
+			let errors = try decoder.decode([TypedValue].self, from: errorsJSON)
+			throw errors
+		}
+	}
+}
+
+public let assertWithSpecification: AssertWithSpecification = makeAssertWithSpecification(serializeSpec, serializeUnvalidatedItem)
