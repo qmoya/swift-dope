@@ -4,7 +4,7 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 	public func makeIterator() -> Dictionary<String, TypedValue>.Iterator {
 		storage.makeIterator()
 	}
-	
+
 	public typealias Key = String
 	public typealias Value = TypedValue
 
@@ -19,10 +19,10 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 	public init(_ dictionary: [String: TypedValue]) {
 		storage = dictionary
 	}
-	
+
 	public init(_ dictionary: [String: Any]) {
 		var storage = [String: TypedValue]()
-		
+
 		for (key, value) in dictionary {
 			if let v = value as? TypedValue {
 				storage[key] = v
@@ -49,7 +49,7 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 				storage[key] = .hashMap(v)
 			}
 		}
-		
+
 		self.storage = storage
 	}
 
@@ -72,7 +72,7 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 		var container = encoder.singleValueContainer()
 		try container.encode(storage)
 	}
-	
+
 	public func merging(
 		_ other: HashMap,
 		uniquingKeysWith combine: (TypedValue, TypedValue) throws -> TypedValue
@@ -80,6 +80,9 @@ public struct HashMap: Equatable, Hashable, Codable, ExpressibleByDictionaryLite
 		let merged = try storage.merging(other.storage, uniquingKeysWith: combine)
 		return HashMap(merged)
 	}
+
+	public var keys: [String] { Array(storage.keys) }
+	public var values: [TypedValue] { Array(storage.values) }
 }
 
 extension HashMap: Error {}
@@ -203,7 +206,7 @@ public extension HashMap {
 	subscript(array key: String, default fallback: [TypedValue]) -> [TypedValue] {
 		self[array: key] ?? fallback
 	}
-	
+
 	subscript(hashMaps key: String) -> [HashMap]? {
 		guard let array = self[array: key] else {
 			return nil
@@ -225,7 +228,7 @@ public extension HashMap {
 	subscript(hashMaps key: String, default fallback: [HashMap]) -> [HashMap] {
 		self[hashMaps: key] ?? fallback
 	}
-	
+
 	subscript(key: String) -> TypedValue? {
 		get {
 			storage[key]
@@ -237,5 +240,5 @@ public extension HashMap {
 }
 
 extension HashMap: Identifiable {
-	public var id: String { self[string: "id", default: UUID().uuidString]}
+	public var id: String { self[string: "id", default: UUID().uuidString] }
 }

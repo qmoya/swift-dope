@@ -28,10 +28,13 @@ typealias SerializeUnvalidatedItem = (JSONEncoder, UnvalidatedItem) throws -> An
 public typealias AssertWithSpecification = (Specification, UnvalidatedItem) throws -> ValidatedItem
 
 // Validate an unvalidated item using a file.
-public typealias AssertWithFile = (FileBaseName,  UnvalidatedItem) throws -> ValidatedItem
+public typealias AssertWithFile = (FileBaseName, UnvalidatedItem) throws -> ValidatedItem
 
 // Make a validate function.
-typealias MakeAssertWithSpecification = (@escaping SerializeSpec, @escaping SerializeUnvalidatedItem)
+typealias MakeAssertWithSpecification = (
+	@escaping SerializeSpec,
+	@escaping SerializeUnvalidatedItem
+)
 	-> AssertWithSpecification
 
 public typealias MakeAssertWithFile = (Bundle) -> AssertWithFile
@@ -49,26 +52,27 @@ let serializeUnvalidatedItem: SerializeUnvalidatedItem = { encoder, item in
 	return try JSONSerialization.jsonObject(with: itemJSON)
 }
 
-let makeAssertWithSpecification: MakeAssertWithSpecification = { serializeSpec, serializeUnvalidatedItem in
-	{ specification, item in
-		let encoder = JSONEncoder()
+let makeAssertWithSpecification: MakeAssertWithSpecification =
+	{ serializeSpec, serializeUnvalidatedItem in
+		{ specification, item in
+			let encoder = JSONEncoder()
 
-		let serializedItem = try serializeUnvalidatedItem(encoder, item)
-		let serializedSpec = try serializeSpec(encoder, specification)
-		
-		let validationResult = try JSONSchema.validate(serializedItem, schema: serializedSpec)
+			let serializedItem = try serializeUnvalidatedItem(encoder, item)
+			let serializedSpec = try serializeSpec(encoder, specification)
 
-		switch validationResult {
-		case .valid:
-			return item
-		case let .invalid(errors):
-			let errorsJSON = try encoder.encode(errors)
-			let decoder = JSONDecoder()
-			let errors = try decoder.decode([TypedValue].self, from: errorsJSON)
-			throw errors
+			let validationResult = try JSONSchema.validate(serializedItem, schema: serializedSpec)
+
+			switch validationResult {
+			case .valid:
+				return item
+			case let .invalid(errors):
+				let errorsJSON = try encoder.encode(errors)
+				let decoder = JSONDecoder()
+				let errors = try decoder.decode([TypedValue].self, from: errorsJSON)
+				throw errors
+			}
 		}
 	}
-}
 
 public let makeAssertWithFile: MakeAssertWithFile = { bundle in
 	{ baseName, item in
@@ -92,4 +96,7 @@ public let makeAssertWithFile: MakeAssertWithFile = { bundle in
 	}
 }
 
-public let assertWithSpecification: AssertWithSpecification = makeAssertWithSpecification(serializeSpec, serializeUnvalidatedItem)
+public let assertWithSpecification: AssertWithSpecification = makeAssertWithSpecification(
+	serializeSpec,
+	serializeUnvalidatedItem
+)
