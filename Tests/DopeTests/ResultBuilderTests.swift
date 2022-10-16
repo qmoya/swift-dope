@@ -2,6 +2,14 @@ import XCTest
 @testable import Dope
 
 final class ResultBuilderTests: XCTestCase {
+	func testSingleString() throws {
+		let example: TypedValue = makeTypedValue {
+			"hello"
+		}
+
+		XCTAssertEqual(example, .string("hello"))
+	}
+
 	func testArray() throws {
 		let example: TypedValue = makeTypedValue {
 			"hello"
